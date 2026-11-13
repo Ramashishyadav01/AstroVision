@@ -60,7 +60,7 @@ const GenerateReport = () => {
   const [searchParams] = useSearchParams();
   const preType = searchParams.get('type') || '';
 
-  const [selectedType, setSelectedType] = useState(preType);
+  const [selectedType, setSelectedType] = useState(preType || 'planets-extended');
   const [form, setForm] = useState({
     year: 1990,
     month: 1,
@@ -87,19 +87,25 @@ const GenerateReport = () => {
 
   const handleTypeSelect = (type) => {
     setSelectedType(type);
+    setErrors((prev) => ({ ...prev, type: '' }));
     setApiError('');
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: name === 'placeName' ? value : Number(value) || value }));
-    setErrors((prev) => ({ ...prev, [name]: '' }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: name === 'placeName'
+        ? value
+        : (value === '' ? '' : isNaN(Number(value)) ? value : Number(value)),
+    }));
+    setErrors((prev) => ({ ...prev, [name]: '', type: '' }));
     setApiError('');
   };
 
   const validate = () => {
     const errs = {};
-    if (!selectedType) errs.type = 'Please select a report type.';
+    if (!selectedType) errs.type = 'Please select a report type in Step 1.';
     if (!form.latitude && form.latitude !== 0) errs.latitude = 'Latitude is required.';
     else if (form.latitude < -90 || form.latitude > 90) errs.latitude = 'Latitude must be between -90 and 90.';
     if (!form.longitude && form.longitude !== 0) errs.longitude = 'Longitude is required.';
@@ -112,6 +118,7 @@ const GenerateReport = () => {
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -363,6 +370,18 @@ const GenerateReport = () => {
                   <p style={{ fontWeight: 600 }}>Report Generation Failed</p>
                   <p style={{ marginTop: '4px', opacity: 0.9 }}>{apiError}</p>
                 </div>
+              </div>
+            )}
+
+            {/* Validation errors summary */}
+            {Object.keys(errors).length > 0 && (
+              <div style={{ padding: '14px 18px', borderRadius: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: '0.85rem' }}>
+                <p style={{ fontWeight: 600 }}>⚠️ Please resolve the following:</p>
+                <ul style={{ listStyle: 'disc', paddingLeft: '20px', marginTop: '6px' }}>
+                  {Object.values(errors).map((err, i) => (
+                    <li key={i}>{err}</li>
+                  ))}
+                </ul>
               </div>
             )}
 
