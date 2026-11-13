@@ -50,10 +50,17 @@ const ForgotPasswordPage = () => {
         setDevLink(res.data.data.resetUrl);
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          'Something went wrong. Please try again.'
-      );
+      let message = err.response?.data?.message;
+      if (!message) {
+        if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+          message = 'Cannot connect to backend server. Please verify your backend API URL and network connection.';
+        } else if (err.response?.status === 404) {
+          message = 'API endpoint not found (404). Please ensure the backend is running and VITE_API_BASE_URL is configured.';
+        } else {
+          message = err.message || 'Something went wrong. Please try again.';
+        }
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }

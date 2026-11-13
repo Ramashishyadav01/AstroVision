@@ -90,10 +90,15 @@ const ResetPasswordPage = () => {
         setTokenEmail(res.data?.data?.email || '');
       })
       .catch((err) => {
-        setTokenError(
-          err.response?.data?.message ||
-            'This reset link is invalid or has already expired.'
-        );
+        let message = err.response?.data?.message;
+        if (!message) {
+          if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+            message = 'Cannot connect to backend server. Please verify your backend API URL and network connection.';
+          } else {
+            message = 'This reset link is invalid or has already expired.';
+          }
+        }
+        setTokenError(message);
       })
       .finally(() => setVerifying(false));
   }, [token]);
@@ -123,9 +128,15 @@ const ResetPasswordPage = () => {
         navigate('/dashboard');
       }, 2000);
     } catch (err) {
-      setServerError(
-        err.response?.data?.message || 'Failed to reset password. Please try again.'
-      );
+      let message = err.response?.data?.message;
+      if (!message) {
+        if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+          message = 'Cannot connect to backend server. Please verify your backend API URL and network connection.';
+        } else {
+          message = err.message || 'Failed to reset password. Please try again.';
+        }
+      }
+      setServerError(message);
     } finally {
       setLoading(false);
     }

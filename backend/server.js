@@ -21,18 +21,35 @@ const clientUrls = (process.env.CLIENT_URL || '')
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://localhost:5174',
   ...clientUrls,
 ];
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin) || process.env.CLIENT_URL === '*') return true;
+  try {
+    const url = new URL(origin);
+    if (url.hostname.endsWith('.vercel.app')) return true;
+  } catch (e) {
+    // ignore parse error
+  }
+  return false;
+};
+
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || process.env.CLIENT_URL === '*') {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
+    console.warn(`Blocked by CORS: ${origin}`);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -68,8 +85,12 @@ app.use((err, req, res, next) => {
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`\n🌟 AstroVision Server running on http://localhost:${PORT}`);
-  console.log(`🌙 Environment: ${process.env.NODE_ENV}`);
-  console.log(`📡 API Base: http://localhost:${PORT}/api\n`);
-});
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n🌟 AstroVision Server running on http://localhost:${PORT}`);
+    console.log(`🌙 Environment: ${process.env.NODE_ENV}`);
+    console.log(`📡 API Base: http://localhost:${PORT}/api\n`);
+  });
+}
+
+module.exports = app;
