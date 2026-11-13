@@ -5,10 +5,12 @@ const User = require('../models/User');
 const Report = require('../models/Report');
 
 // ── Helper: generate JWT ──────────────────────────────────────────────────────
-const generateToken = (user) =>
-  jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, {
+const generateToken = (user) => {
+  const secret = process.env.JWT_SECRET || 'astrovision_jwt_secret_key_2024_backup_default';
+  return jwt.sign({ id: user._id, email: user.email }, secret, {
     expiresIn: '7d',
   });
+};
 
 // ── Helper: nodemailer transporter ───────────────────────────────────────────
 const createTransporter = () =>
@@ -113,8 +115,18 @@ const register = async (req, res) => {
       data: { token, user: { id: user._id, fullName: user.fullName, email: user.email, createdAt: user.createdAt } },
     });
   } catch (err) {
-    console.error('Register error:', err.message);
-    return res.status(500).json({ success: false, message: 'Server error during registration.' });
+    console.error('Register error:', err);
+    if (err.code === 11000) {
+      return res.status(409).json({ success: false, message: 'An account with this email already exists.' });
+    }
+    const isDbError =
+      err.name === 'MongooseError' ||
+      err.name === 'MongooseServerSelectionError' ||
+      (err.message && (err.message.includes('buffering timed out') || err.message.includes('ECONNREFUSED') || err.message.includes('whitelist') || err.message.includes('querySrv')));
+    const message = isDbError
+      ? 'Database connection failed. Please ensure MongoDB Atlas Network Access has 0.0.0.0/0 (allow from anywhere).'
+      : (err.message ? `Registration failed: ${err.message}` : 'Server error during registration.');
+    return res.status(500).json({ success: false, message });
   }
 };
 
@@ -145,8 +157,15 @@ const login = async (req, res) => {
       data: { token, user: { id: user._id, fullName: user.fullName, email: user.email, createdAt: user.createdAt } },
     });
   } catch (err) {
-    console.error('Login error:', err.message);
-    return res.status(500).json({ success: false, message: 'Server error during login.' });
+    console.error('Login error:', err);
+    const isDbError =
+      err.name === 'MongooseError' ||
+      err.name === 'MongooseServerSelectionError' ||
+      (err.message && (err.message.includes('buffering timed out') || err.message.includes('ECONNREFUSED') || err.message.includes('whitelist') || err.message.includes('querySrv')));
+    const message = isDbError
+      ? 'Database connection failed. Please ensure MongoDB Atlas Network Access has 0.0.0.0/0 (allow from anywhere).'
+      : (err.message ? `Login failed: ${err.message}` : 'Server error during login.');
+    return res.status(500).json({ success: false, message });
   }
 };
 

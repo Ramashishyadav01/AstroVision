@@ -1,3 +1,5 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -62,6 +64,20 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ─── Database Middleware ──────────────────────────────────────────────────────
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('Database connection error in request:', err.message);
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection failed. Please ensure MongoDB Atlas Network Access has 0.0.0.0/0 (allow from anywhere) and MONGO_URI is set.',
+    });
+  }
+});
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportRoutes);
@@ -85,7 +101,7 @@ app.use((err, req, res, next) => {
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`\n🌟 AstroVision Server running on http://localhost:${PORT}`);
     console.log(`🌙 Environment: ${process.env.NODE_ENV}`);
