@@ -9,8 +9,9 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const reportRoutes = require('./routes/reports');
 
-// Connect to MongoDB
-connectDB();
+// NOTE: Do NOT call connectDB() at module level — Vercel serverless functions
+// import this module on every cold start, and the per-request middleware below
+// handles the connection. Calling it here creates a race condition.
 
 const app = express();
 

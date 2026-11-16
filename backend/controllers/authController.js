@@ -221,7 +221,13 @@ const forgotPassword = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     // Build reset URL pointing at the frontend
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    // CLIENT_URL may be comma-separated (e.g. "http://localhost:5173,https://prod.vercel.app")
+    // Pick the last non-localhost URL in production, or first URL in dev
+    const clientUrlRaw = process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrls = clientUrlRaw.split(',').map(u => u.trim()).filter(Boolean);
+    const clientUrl = process.env.NODE_ENV === 'production'
+      ? (clientUrls.find(u => !u.includes('localhost')) || clientUrls[clientUrls.length - 1])
+      : clientUrls[0];
     const resetUrl = `${clientUrl}/reset-password/${rawToken}`;
 
     // ── Dev mode: always log to console ──────────────────────────────────────

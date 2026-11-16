@@ -218,7 +218,7 @@ const generateReport = async (req, res) => {
             'x-api-key': apiKey,
             'Content-Type': 'application/json',
           },
-          timeout: 10000,
+          timeout: 25000,
         });
         apiResponse = response.data;
       } catch (axiosError) {

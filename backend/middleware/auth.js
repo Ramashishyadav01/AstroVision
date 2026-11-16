@@ -20,7 +20,8 @@ const auth = (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const secret = process.env.JWT_SECRET || 'astrovision_jwt_secret_key_2024_backup_default';
+    const decoded = jwt.verify(token, secret);
     req.user = { id: decoded.id, email: decoded.email };
     next();
   } catch (error) {
