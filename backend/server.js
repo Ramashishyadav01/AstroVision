@@ -56,6 +56,16 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// ─── URL Normalizer (handles Vercel rewrite paths) ───────────────────────────
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api/index.js')) {
+    req.url = req.url.replace('/api/index.js', '') || '/';
+  } else if (req.url.startsWith('/index.js')) {
+    req.url = req.url.replace('/index.js', '') || '/';
+  }
+  next();
+});
+
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get(['/api/health', '/health', '/api', '/'], (req, res) => {
   res.json({
