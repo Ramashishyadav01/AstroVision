@@ -21,7 +21,9 @@ const connectDB = async () => {
       }
       const mongoUri = rawUri.replace(/^["']|["']$/g, '').trim();
 
-      const conn = await mongoose.connect(mongoUri);
+      const conn = await mongoose.connect(mongoUri, {
+        serverSelectionTimeoutMS: 8000,
+      });
       console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
       connectionPromise = null; // Allow retry on next request

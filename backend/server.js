@@ -82,9 +82,10 @@ app.use(async (req, res, next) => {
     next();
   } catch (err) {
     console.error('Database connection error in request:', err.message);
+    const detail = err.message || 'Unknown database error';
     return res.status(503).json({
       success: false,
-      message: 'Database connection failed. Please ensure MongoDB Atlas Network Access has 0.0.0.0/0 (allow from anywhere) and MONGO_URI is set.',
+      message: `Database connection failed: ${detail}. Please ensure MONGO_URI is set in Vercel and MongoDB Atlas Network Access has 0.0.0.0/0 (allow from anywhere).`,
     });
   }
 });
