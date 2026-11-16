@@ -15,7 +15,8 @@ const connectDB = async () => {
 
   connectionPromise = (async () => {
     try {
-      const rawUri = process.env.MONGO_URI;
+      const fallbackUri = 'mongodb+srv://yadavramashish42449_db_user:AstroVision12345@cluster0.gx91pvi.mongodb.net/astrovision?retryWrites=true&w=majority';
+      const rawUri = process.env.MONGO_URI || fallbackUri;
       if (!rawUri) {
         throw new Error('MONGO_URI environment variable is not defined.');
       }
